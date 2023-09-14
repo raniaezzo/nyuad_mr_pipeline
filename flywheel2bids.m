@@ -154,7 +154,23 @@ end
 %% clean up: delete leftover files
 
 rmdir(fullfile(sourcedatadir,'tmpdir'), 's')
-delete(tardir); 
+delete(tardir);
+
+%% Add tsv to BIDS perfusion
+
+bids_perf_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'perf');
+
+if isfolder(bids_perf_dir)
+    asl_list = dir(fullfile(bids_perf_dir, sprintf('*asl%s', '.json')));
+end
+
+% in rare cases with > 1 asl file
+asl_file = asl_list(1);
+contextfilename = '/Users/rje257/Desktop/BIDS_testing/sub-0239/ses-02/perf/sub-0239_ses-02_aslcontext.tsv';
+
+perf_vals = {'volume_type';'control';'label'; 'control';'label'; ...
+    'control';'label'; 'control';'label'; 'control';'label'};
+writecell(perf_vals, contextfilename, 'filetype','text', 'delimiter','\t');
 
 %% Validating BIDS
 
