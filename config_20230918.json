@@ -6,7 +6,7 @@
   "compKeys": ["SeriesNumber", "AcquisitionTime", "SidecarFilename"],
   "post_op": [{"cmd": "pydeface --outfile dst_file src_file --verbose --debug --force",
               "datatype": "anat",
-              "suffix": ["T1w", "FLAIRw", "T2w"]}],
+              "suffix": ["T1w", "FLAIR", "T2w"]}],
 
   "extractors": {
     "SeriesDescription": [
@@ -49,7 +49,7 @@
     },
     {
       "datatype": "anat",
-      "suffix": "FLAIRw",
+      "suffix": "FLAIR",
       "criteria": {
         "ProtocolName": "anat-FLAIR[wW]*",
         "ImageTypeText": ["ORIGINAL", "PRIMARY", "M", "NORM", "DIS2D"]
@@ -194,7 +194,8 @@
      "custom_entities": "dir-AP",
      "criteria": {
        "SidecarFilename": "*fmap_*",
-       "PhaseEncodingDirection": "j-"
+       "PhaseEncodingDirection": "j-",
+       "ScanningSequence": "EP"
      },
      "sidecar_changes": {
        "IntendedFor": ["id_task_bold_AP", "id_task_sbref_AP"]
@@ -206,7 +207,8 @@
      "custom_entities": "dir-PA",
      "criteria": {
        "SidecarFilename": "*fmap_*",
-       "PhaseEncodingDirection": "j"
+       "PhaseEncodingDirection": "j",
+       "ScanningSequence": "EP"
      },
      "sidecar_changes": {
        "IntendedFor": ["id_perf_m0scan_asl", "id_perf_m0scan_M", "id_perf_asl", "id_task_sbref_PA", "id_task_bold_PA"]

@@ -239,7 +239,7 @@ if isfolder(bids_perf_dir)
 
     % in rare cases with > 1 asl file
     asl_file = asl_list(1);
-    contextfilename = fullfile(bids_perf_dir, ['sub-', subject_num, '_', 'ses-',ses_num, '_aslcontext.tsv']);
+    contextfilename = '/Users/rje257/Desktop/BIDS_testing/sub-0239/ses-02/perf/sub-0239_ses-02_aslcontext.tsv';
     
     perf_vals = {'volume_type';'control';'label'; 'control';'label'; ...
         'control';'label'; 'control';'label'; 'control';'label'};
