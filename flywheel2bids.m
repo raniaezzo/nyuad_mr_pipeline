@@ -4,9 +4,9 @@
 clear all; close all; clc
 warning('off', 'MATLAB:MKDIR:DirectoryExists');
 flywheel_group = 'rokerslab';
-flywheel_project = 'vri_hfs';
-bids_dir = '/Users/rje257/Desktop/BIDS_testing';
-configfilePath = '/Users/rje257/Downloads/config_20230901.json';
+flywheel_project = 'dg'; %'vri_hfs';
+bids_dir = '/Users/rje257/Desktop/BIDS_dump';
+configfilePath = '/Users/rje257/Documents/GitHub/nyuad_mr_pipeline/config_20230918.json';
 
 fw_sdk_path = '/Applications/flywheel-sdk/';
 addpath(genpath(fw_sdk_path));
@@ -29,7 +29,7 @@ project = fw.lookup(fullfile(flywheel_group,flywheel_project));
 subjects = project.subjects.find();
 
 % return index of specific subject
-SubjectName = 'Subject_0239';
+SubjectName = 'Subject_0426';
 subIdx = find(cell2mat(arrayfun(@(x) contains(subjects{x,1}.code,SubjectName), ...
     1 : numel(subjects), 'UniformOutput', false)));
 
