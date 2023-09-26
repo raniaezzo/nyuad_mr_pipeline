@@ -41,10 +41,26 @@
     },
     {
       "datatype": "anat",
+      "suffix": "T1w",
+      "criteria": {
+        "SeriesDescription": "T1[wW]*_MPR",
+        "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"]
+      }
+    },
+    {
+      "datatype": "anat",
       "suffix": "T2w",
       "criteria": {
         "ProtocolName": "anat-T2[wW]*",
         "ImageTypeText": ["ORIGINAL", "PRIMARY", "M", "NORM", "DIS2D"]
+      }
+    },
+    {
+      "datatype": "anat",
+      "suffix": "T2w",
+      "criteria": {
+        "SeriesDescription": "T2[wW]*_SPC",
+        "ImageType": ["ORIGINAL", "PRIMARY", "M", "ND", "NORM"]
       }
     },
     {

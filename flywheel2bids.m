@@ -3,8 +3,8 @@
 %%
 clear all; close all; clc
 warning('off', 'MATLAB:MKDIR:DirectoryExists');
-flywheel_group = 'rokerslab';
-flywheel_project = 'dg'; %'vri_hfs';
+flywheel_group = 'rokerslab'; %'bi';
+flywheel_project = 'retmap'; %'retmap'; %'dg'; %'vri_hfs'; 'anat'
 bids_dir = '/Users/rje257/Desktop/BIDS_dump';
 configfilePath = '/Users/rje257/Documents/GitHub/nyuad_mr_pipeline/config_20230918.json';
 
@@ -29,7 +29,7 @@ project = fw.lookup(fullfile(flywheel_group,flywheel_project));
 subjects = project.subjects.find();
 
 % return index of specific subject
-SubjectName = 'Subject_0426';
+SubjectName = 'Subject_0037';
 subIdx = find(cell2mat(arrayfun(@(x) contains(subjects{x,1}.code,SubjectName), ...
     1 : numel(subjects), 'UniformOutput', false)));
 
@@ -89,6 +89,9 @@ end
 
     
 %% DCM2BIDS
+
+%subject_num = 'wlsubj123'; % for overriding subjectname
+
 for si=1:numel(sessions)
     
     ses_num = num2str(si);
@@ -104,7 +107,7 @@ for si=1:numel(sessions)
 end
 
 %% SBREF COPY
-for si=1:1 %1:numel(sessions)
+for si=1:numel(sessions)
     
     ses_num = num2str(si);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
@@ -157,71 +160,76 @@ end
 % first task run (both field maps should apply to all bold runs, optionally
 % to sbrefs as well)
 
-bids_fmap_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'fmap');
-func_content = dir(fullfile(bids_func_dir, '*.nii.gz'));
+for si=1:numel(sessions)
 
-if isfolder(bids_fmap_dir)
-
-    % list fmap jsons
-
-    fmap_jsons = dir(fullfile(bids_fmap_dir, '*epi.json'));
-
-    valFill = {};
-
-    for ii=1:numel(func_content)
-        intendedItem = ['bids::', fullfile(['sub-', subject_num], ['ses-',ses_num], 'func', func_content(ii).name)];
-        
-        valFill = [{intendedItem}; valFill];
+    ses_num = num2str(si);
+    bids_fmap_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'fmap');
+    func_content = dir(fullfile(bids_func_dir, '*.nii.gz'));
+    
+    if isfolder(bids_fmap_dir)
+    
+        % list fmap jsons
+    
+        fmap_jsons = dir(fullfile(bids_fmap_dir, '*epi.json'));
+    
+        valFill = {};
+    
+        for ii=1:numel(func_content)
+            intendedItem = ['bids::', fullfile(['sub-', subject_num], ['ses-',ses_num], 'func', func_content(ii).name)];
+            
+            valFill = [{intendedItem}; valFill];
+        end
+    
+    %     for fi=1:numel(fmap_jsons)
+    %         % read values from original json
+    %         fname = fullfile(fmap_jsons(fi).folder, fmap_jsons(fi).name); 
+    %         fid = fopen(fname); 
+    %         raw = fread(fid,inf); 
+    %         str = char(raw'); 
+    %         fclose(fid); 
+    %         disp('~~~~')
+    %         % decode and modify
+    %         val = jsondecode(str);
+    %         valModified = val; valModified.IntendedFor = valFill;
+    %         encodedJSON = jsonencode(valModified); 
+    % 
+    %         % add a return character after all commas:
+    %         new_string = strrep(encodedJSON, ',', ',\n');
+    %         % add a return character after curly brackets:
+    %         new_string = strrep(new_string, '{', '{\n');
+    %         % replace % with -
+    %         new_string = strrep(new_string, '%', '-');
+    % 
+    %         fid = fopen(strrep(fname, 'epi', 'epi2'), 'w'); 
+    %         fprintf(fid, new_string); 
+    %         fclose(fid);
+    %     end
+    
+        for fi = 1:numel(fmap_jsons) % for each json file
+            % read values from original json
+            fname = fullfile(fmap_jsons(fi).folder, fmap_jsons(fi).name); 
+            fid = fopen(fname); 
+            raw = fread(fid,inf); 
+            str = char(raw'); 
+            fclose(fid); 
+            disp('~~~~')
+            % decode and modify
+            val = jsondecode(str);
+            valModified = val; valModified.IntendedFor = valFill;
+               
+            str = jsonencode(valModified);
+            
+            % Make the json output file more human readable
+            str = strrep(str, ',"', sprintf(',\n"'));
+            str = strrep(str, '[{', sprintf('[\n{\n'));
+            str = strrep(str, '}]', sprintf('\n}\n]'));
+            
+            fid = fopen(fname,'w');
+            fwrite(fid,str);
+            fclose(fid);
+        end 
+    
     end
-
-%     for fi=1:numel(fmap_jsons)
-%         % read values from original json
-%         fname = fullfile(fmap_jsons(fi).folder, fmap_jsons(fi).name); 
-%         fid = fopen(fname); 
-%         raw = fread(fid,inf); 
-%         str = char(raw'); 
-%         fclose(fid); 
-%         disp('~~~~')
-%         % decode and modify
-%         val = jsondecode(str);
-%         valModified = val; valModified.IntendedFor = valFill;
-%         encodedJSON = jsonencode(valModified); 
-% 
-%         % add a return character after all commas:
-%         new_string = strrep(encodedJSON, ',', ',\n');
-%         % add a return character after curly brackets:
-%         new_string = strrep(new_string, '{', '{\n');
-%         % replace % with -
-%         new_string = strrep(new_string, '%', '-');
-% 
-%         fid = fopen(strrep(fname, 'epi', 'epi2'), 'w'); 
-%         fprintf(fid, new_string); 
-%         fclose(fid);
-%     end
-
-    for fi = 1:numel(fmap_jsons) % for each json file
-        % read values from original json
-        fname = fullfile(fmap_jsons(fi).folder, fmap_jsons(fi).name); 
-        fid = fopen(fname); 
-        raw = fread(fid,inf); 
-        str = char(raw'); 
-        fclose(fid); 
-        disp('~~~~')
-        % decode and modify
-        val = jsondecode(str);
-        valModified = val; valModified.IntendedFor = valFill;
-           
-        str = jsonencode(valModified);
-        
-        % Make the json output file more human readable
-        str = strrep(str, ',"', sprintf(',\n"'));
-        str = strrep(str, '[{', sprintf('[\n{\n'));
-        str = strrep(str, '}]', sprintf('\n}\n]'));
-        
-        fid = fopen(fname,'w');
-        fwrite(fid,str);
-        fclose(fid);
-    end 
 
 end
 
@@ -232,20 +240,23 @@ delete(tardir);
 
 %% Add tsv to BIDS perfusion
 
-bids_perf_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'perf');
+for si=1:numel(sessions)
 
-if isfolder(bids_perf_dir)
-    asl_list = dir(fullfile(bids_perf_dir, sprintf('*asl%s', '.json')));
-
-    % in rare cases with > 1 asl file
-    asl_file = asl_list(1);
-    contextfilename = fullfile(bids_perf_dir, ['sub-', subject_num, '_', 'ses-',ses_num, '_aslcontext.tsv']);
+    ses_num = num2str(si);
+    bids_perf_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'perf');
     
-    perf_vals = {'volume_type';'control';'label'; 'control';'label'; ...
-        'control';'label'; 'control';'label'; 'control';'label'};
-    writecell(perf_vals, contextfilename, 'filetype','text', 'delimiter','\t');
+    if isfolder(bids_perf_dir)
+        asl_list = dir(fullfile(bids_perf_dir, sprintf('*asl%s', '.json')));
+    
+        % in rare cases with > 1 asl file
+        asl_file = asl_list(1);
+        contextfilename = fullfile(bids_perf_dir, ['sub-', subject_num, '_', 'ses-',ses_num, '_aslcontext.tsv']);
+        
+        perf_vals = {'volume_type';'control';'label'; 'control';'label'; ...
+            'control';'label'; 'control';'label'; 'control';'label'};
+        writecell(perf_vals, contextfilename, 'filetype','text', 'delimiter','\t');
+    end
 end
-
 
 %% Validating BIDS
 
