@@ -3,10 +3,18 @@
 %%
 clear all; close all; clc
 warning('off', 'MATLAB:MKDIR:DirectoryExists');
+
+% VARIABLES THAT NEED TO BE DEFINED
 flywheel_group = 'rokerslab'; %'bi';
 flywheel_project = 'retmap'; %'retmap'; %'dg'; %'vri_hfs'; 'anat'
+SubjectName = 'Subject_0392';
 bids_dir = '/Users/rje257/Desktop/BIDS_dump';
 configfilePath = '/Users/rje257/Documents/GitHub/nyuad_mr_pipeline/config_20230918.json';
+
+% OPT VARIABLES
+renameSubject = 0; assignedName = '';
+numPastSessions = 0; % how many sessions were run in the past (do not count sessions with 
+% naming conventions that are not ses-01 etc.)
 
 fw_sdk_path = '/Applications/flywheel-sdk/';
 addpath(genpath(fw_sdk_path));
@@ -29,7 +37,6 @@ project = fw.lookup(fullfile(flywheel_group,flywheel_project));
 subjects = project.subjects.find();
 
 % return index of specific subject
-SubjectName = 'Subject_0037';
 subIdx = find(cell2mat(arrayfun(@(x) contains(subjects{x,1}.code,SubjectName), ...
     1 : numel(subjects), 'UniformOutput', false)));
 
@@ -45,11 +52,17 @@ if ~isfolder(bids_dir)
     % run BIDS scaffolding here
 end
 
-sourcedatadir = fullfile(bids_dir,'sourcedata',subject_id);
+if renameSubject ==1
+    assigned_subjName = assignedName;
+else
+    assigned_subjName = subject_id;
+end
+
+sourcedatadir = fullfile(bids_dir,'sourcedata',assigned_subjName);
 mkdir(sourcedatadir)
 
 % gather subject id (format ##) for BIDS purposes
-subject_num = regexp(subject_id, '\d*', 'match');
+subject_num = regexp(assigned_subjName, '\d*', 'match');
 
 if length(subject_num)>1
     error('Cannot identify unique alphanumeric subject nlabel')
@@ -58,7 +71,7 @@ else
 end
 
 %% Download the Subject (all files) to source directory:
-tardir = fullfile(sourcedatadir,[subject_id,'.tar']);
+tardir = fullfile(sourcedatadir,[assigned_subjName,'.tar']);
 fw.downloadTar([subject_fwid], tardir)
 
 % untar files
@@ -75,7 +88,7 @@ sessions = sessions(~ismember({sessions.name},{'.','..','.DS_Store'}));
 % parallel paths are treated as separate sessions 
 for si=1:numel(sessions)
 
-    ses_num = num2str(si);
+    ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
     movefile(fullfile(sessions(si).folder, sessions(si).name, '*'), ...
         fullfile(sourcedatadir, sprintf('ses%s',ses_num)));
@@ -94,14 +107,14 @@ end
 
 for si=1:numel(sessions)
     
-    ses_num = num2str(si);
+    ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
     sessionsource = fullfile(sourcedatadir, sprintf('ses%s',ses_num));
 
     % run dcm2bids (use master config file - latest version)
     % this will also run pydeface
     cmd = sprintf("dcm2bids -d %s -o %s -p %s -s %s -c %s --clobber", ...
-        sessionsource, bids_dir, subject_num, ses_num, configfilePath);
+        sessionsource, bids_dir, assigned_subjName, ses_num, configfilePath);
     
     [status, cmdout] = system(cmd, '-echo');
 end
@@ -109,11 +122,11 @@ end
 %% SBREF COPY
 for si=1:numel(sessions)
     
-    ses_num = num2str(si);
+    ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
     % copy SBREF to every run in session (keep in mind there is nii.gz and .json)
     % doing this to ensure fMRIprep account for the sbrefs for each run
-    bids_func_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'func');
+    bids_func_dir = fullfile(bids_dir, ['sub-', assigned_subjName], ['ses-',ses_num], 'func');
     
     filetypes = {'.json', '.nii.gz'};
     
@@ -162,8 +175,8 @@ end
 
 for si=1:numel(sessions)
 
-    ses_num = num2str(si);
-    bids_fmap_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'fmap');
+    ses_num = num2str(si+numPastSessions);
+    bids_fmap_dir = fullfile(bids_dir, ['sub-', assigned_subjName], ['ses-',ses_num], 'fmap');
     func_content = dir(fullfile(bids_func_dir, '*.nii.gz'));
     
     if isfolder(bids_fmap_dir)
@@ -175,35 +188,10 @@ for si=1:numel(sessions)
         valFill = {};
     
         for ii=1:numel(func_content)
-            intendedItem = ['bids::', fullfile(['sub-', subject_num], ['ses-',ses_num], 'func', func_content(ii).name)];
+            intendedItem = ['bids::', fullfile(['sub-', assigned_subjName], ['ses-',ses_num], 'func', func_content(ii).name)];
             
             valFill = [{intendedItem}; valFill];
         end
-    
-    %     for fi=1:numel(fmap_jsons)
-    %         % read values from original json
-    %         fname = fullfile(fmap_jsons(fi).folder, fmap_jsons(fi).name); 
-    %         fid = fopen(fname); 
-    %         raw = fread(fid,inf); 
-    %         str = char(raw'); 
-    %         fclose(fid); 
-    %         disp('~~~~')
-    %         % decode and modify
-    %         val = jsondecode(str);
-    %         valModified = val; valModified.IntendedFor = valFill;
-    %         encodedJSON = jsonencode(valModified); 
-    % 
-    %         % add a return character after all commas:
-    %         new_string = strrep(encodedJSON, ',', ',\n');
-    %         % add a return character after curly brackets:
-    %         new_string = strrep(new_string, '{', '{\n');
-    %         % replace % with -
-    %         new_string = strrep(new_string, '%', '-');
-    % 
-    %         fid = fopen(strrep(fname, 'epi', 'epi2'), 'w'); 
-    %         fprintf(fid, new_string); 
-    %         fclose(fid);
-    %     end
     
         for fi = 1:numel(fmap_jsons) % for each json file
             % read values from original json
@@ -242,7 +230,7 @@ delete(tardir);
 
 for si=1:numel(sessions)
 
-    ses_num = num2str(si);
+    ses_num = num2str(si+numPastSessions);
     bids_perf_dir = fullfile(bids_dir, ['sub-', subject_num], ['ses-',ses_num], 'perf');
     
     if isfolder(bids_perf_dir)
