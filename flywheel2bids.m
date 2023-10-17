@@ -7,13 +7,13 @@ warning('off', 'MATLAB:MKDIR:DirectoryExists');
 % VARIABLES THAT NEED TO BE DEFINED
 flywheel_group = 'rokerslab'; %'bi';
 flywheel_project = 'retmap'; %'retmap'; %'dg'; %'vri_hfs'; 'anat'
-SubjectName = 'Subject_0392';
-bids_dir = '/Users/rje257/Desktop/BIDS_dump';
+SubjectName = 'Subject_0248';
+bids_dir = '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids';
 configfilePath = '/Users/rje257/Documents/GitHub/nyuad_mr_pipeline/config_20230918.json';
 
 % OPT VARIABLES
-renameSubject = 0; assignedName = '';
-numPastSessions = 0; % how many sessions were run in the past (do not count sessions with 
+renameSubject = 1; assignedName = 'wlsubj124';
+numPastSessions = 2; % how many sessions were run in the past (do not count sessions with 
 % naming conventions that are not ses-01 etc.)
 
 fw_sdk_path = '/Applications/flywheel-sdk/';
@@ -55,10 +55,11 @@ end
 if renameSubject ==1
     assigned_subjName = assignedName;
 else
-    assigned_subjName = subject_id;
+    tmpname = strsplit(subject_id, '_');
+    assigned_subjName = tmpname{2};
 end
 
-sourcedatadir = fullfile(bids_dir,'sourcedata',assigned_subjName);
+sourcedatadir = fullfile(bids_dir,'sourcedata',subject_id);
 mkdir(sourcedatadir)
 
 % gather subject id (format ##) for BIDS purposes
@@ -105,7 +106,7 @@ end
 
 %subject_num = 'wlsubj123'; % for overriding subjectname
 
-for si=1:numel(sessions)
+for si=1:1 %numel(sessions)
     
     ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
@@ -176,6 +177,7 @@ end
 for si=1:numel(sessions)
 
     ses_num = num2str(si+numPastSessions);
+    if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
     bids_fmap_dir = fullfile(bids_dir, ['sub-', assigned_subjName], ['ses-',ses_num], 'fmap');
     func_content = dir(fullfile(bids_func_dir, '*.nii.gz'));
     
