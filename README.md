@@ -10,11 +10,23 @@ https://docs.flywheel.io/hc/en-us/articles/360042106633-Upgrading-the-Python-and
 toolboxFile = '/path/flywheel-sdk-15.8.0.mltbx';
 InstalledToolbox = matlab.addons.toolbox.installToolbox(toolboxFile)
 
-Dependencies (please ensure all are added to home directory in startup script): 
+Dependencies (please ensure all are added to home directory in startup script, or to anaconda and source conda in start up script): 
 dcm2bids specific version https://github.com/UNFmontreal/Dcm2Bids/pull/260
 dcm2niix latest version https://github.com/rordenlab/dcm2niix
-bids-validator latest version: https://github.com/bids-standard/bids-validator
 pydeface latest version: https://github.com/poldracklab/pydeface
+
+***
+
+*bids-validator latest version: https://github.com/bids-standard/bids-validator
+
+For the bids-validator, you will want to install by:
+1. Install Node.js (at least version 18.0.0)
+2. Update npm to be at least version 7 (sudo npm install --global npm@^7)
+3. From a terminal run sudo npm install -g bids-validator
+4. Run bids-validator to test the command.
+
+NOTE: config file must be updated according to your experiment. Tested on two particular datasets.
+
 
 NOTE: config file must be updated according to your experiment. Tested on two particular datasets.
 

@@ -6,14 +6,14 @@ warning('off', 'MATLAB:MKDIR:DirectoryExists');
 
 % VARIABLES THAT NEED TO BE DEFINED
 flywheel_group = 'rokerslab'; %'bi';
-flywheel_project = 'retmap'; %'retmap'; %'dg'; %'vri_hfs'; 'anat'
-SubjectName = 'Subject_0248';
+flywheel_project = 'dg'; %'retmap'; %'dg'; %'vri_hfs'; 'anat'
+SubjectName = 'Subject_0201';
 bids_dir = '/Volumes/Vision/UsersShare/Rania/Project_dg/data_bids';
 configfilePath = '/Users/rje257/Documents/GitHub/nyuad_mr_pipeline/config_20230918.json';
 
 % OPT VARIABLES
-renameSubject = 1; assignedName = 'wlsubj124';
-numPastSessions = 2; % how many sessions were run in the past (do not count sessions with 
+renameSubject = 0; assignedName = 'wlsubj124';
+numPastSessions = 0; % how many sessions were run in the past (do not count sessions with 
 % naming conventions that are not ses-01 etc.)
 
 fw_sdk_path = '/Applications/flywheel-sdk/';
@@ -106,7 +106,7 @@ end
 
 %subject_num = 'wlsubj123'; % for overriding subjectname
 
-for si=1:1 %numel(sessions)
+for si=1:numel(sessions)
     
     ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
@@ -121,7 +121,7 @@ for si=1:1 %numel(sessions)
 end
 
 %% SBREF COPY
-for si=1:numel(sessions)
+for si=1:1 %numel(sessions)
     
     ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
@@ -174,7 +174,7 @@ end
 % first task run (both field maps should apply to all bold runs, optionally
 % to sbrefs as well)
 
-for si=1:numel(sessions)
+for si=1:1 %numel(sessions)
 
     ses_num = num2str(si+numPastSessions);
     if length(ses_num) < 2; ses_num = strcat('0',ses_num); end
